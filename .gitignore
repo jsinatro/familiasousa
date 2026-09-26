@@ -1,0 +1,10 @@
+dist
+node_modules
+src/react-app-env.d.ts
+playwright-report/
+test-results/
+.playwright/
+.idea
+.vscode
+.env
+playwright.local.config.ts
