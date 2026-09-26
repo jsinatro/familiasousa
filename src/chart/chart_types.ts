@@ -50,7 +50,7 @@ export function getChartType(chartType: ChartType) {
       return FancyChart;
     default:
       // Fall back to hourglass chart.
-      return HourglassChart;
+      return donatso;
   }
 }
 

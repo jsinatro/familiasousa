@@ -159,7 +159,7 @@ export function Intro() {
           <Card.Header>
             <FormattedMessage
               id="intro.title"
-              defaultMessage="Topola Genealogy Viewer"
+              defaultMessage="Topola aaaenealogy Viewer"
             />
           </Card.Header>
         </Card.Content>

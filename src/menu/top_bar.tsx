@@ -406,8 +406,8 @@ export function TopBar(props: Props) {
         greaterThanOrEqual="large"
         attached="top"
         inverted
-        color="blue"
         size="large"
+        style={{ backgroundColor: '#1F1F1F', borderBottom: '1px solid #1a1a1a' }}
       >
         {desktopMenus()}
       </Menu>
@@ -416,8 +416,8 @@ export function TopBar(props: Props) {
         at="small"
         attached="top"
         inverted
-        color="blue"
         size="large"
+        style={{ backgroundColor: '#1F1F1F', borderBottom: '1px solid #1a1a1a' }}
       >
         {mobileMenus()}
       </Menu>

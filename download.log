@@ -1,0 +1,10 @@
+[2026-09-25 22:35:05]: Downloading: https://www.familysearch.org/auth/familysearch/login
+[2026-09-25 22:35:06]: Logging in: https://ident.familysearch.org/login
+[2026-09-25 22:35:07]: Getting an authorization code: https://ident.familysearch.org/cis-web/oauth2/v3/authorization
+[2026-09-25 22:35:08]: Exchanging for an access token: https://ident.familysearch.org/cis-web/oauth2/v3/token
+[2026-09-25 22:35:08]: Downloading: /platform/users/current
+[2026-09-25 22:35:09]: Status code: 200
+[2026-09-25 22:35:09]: Downloading: /service/tree/tree-data/reservations/person/GDWY-F4J/ordinances
+[2026-09-25 22:35:10]: Status code: 200
+[2026-09-25 22:35:10]: Downloading: /platform/tree/persons/GDWY-F4J
+[2026-09-25 22:35:10]: Status code: 200
