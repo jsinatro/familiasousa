@@ -1,30 +1,1591 @@
-<!doctype html>
-<html lang="pt-br">
-  <head>
-    <script>localStorage.setItem('language', 'pt');</script>
-    <!-- GOOGLE_ANALYTICS_START -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-32GXR2WF6S"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-32GXR2WF6S');
-    </script>
-    <!-- GOOGLE_ANALYTICS_END -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no">
-    <meta name="topola-static-url" content="{{ env `STATIC_URL` | html }}">
-    <link rel="icon" href="favicon.png" type="image/png"/>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <title>Endogamia Barbalhense - A família Sousa do Município de Barbalha</title>
-  </head>
-  <body>
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/index.tsx"></script>
-  </body>
+!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>A Família Sousa — do Município de Barbalha</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🌳%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Fundo claro suave com gradientes radiais sutis em ciano e esmeralda */
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.07) 0%, transparent 42%),
+        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 42%);
+    }
+
+    /* Grade sutil do observatório no canvas SVG */
+    .observatory-grid {
+      background-color: #ffffff;
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+    }
+
+    /* Barra de rolagem personalizada no modo claro */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Painéis translúcidos brancos de alto contraste */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    }
+
+    /* Interação nos nós do grafo SVG */
+    .node-card {
+      transition: filter 0.18s ease;
+      cursor: pointer;
+    }
+    .node-card:hover {
+      filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.12));
+    }
+
+    /* Anel pulsante para destacar a Raiz Temporária (Ego) */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.96); opacity: 0.75; }
+      70% { transform: scale(1.06); opacity: 0; }
+      100% { transform: scale(1.06); opacity: 0; }
+    }
+    .ego-pulse {
+      animation: pulse-ring 2.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    #graph-container { touch-action: none; }
+    header.sticky { padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500/20 selection:text-cyan-900">
+
+  <!-- Cabeçalho Fixo e Busca Global -->
+  <header class="sticky top-0 z-40 glass-panel border-b border-slate-200/80 px-4 py-3">
+    <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      
+      <!-- Identidade e Telemetria -->
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/15 to-emerald-500/15 border border-cyan-500/30 flex items-center justify-center shadow-sm">
+            <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" stroke-width="2"></circle>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 3v3m0 12v3M3 12h3m12 0h3m-3.6-6.4l-2.1 2.1m-6.6 6.6l-2.1 2.1m0-10.8l2.1 2.1m6.6 6.6l2.1 2.1"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-sm sm:text-base font-semibold tracking-tight text-slate-900">A Família Sousa, do município de Barbalha</h1>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">
+                EGO-GRAPH ENGINE
+              </span>
+            </div>
+            <p id="telemetry-bar" class="text-[11px] font-mono text-slate-500">
+              Carregando a base familiar...
+            </p>
+          </div>
+        </div>
+
+        <!-- Ação Rápida Mobile -->
+        <button id="btn-schema-mobile" class="lg:hidden px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 border border-slate-300 transition">
+          JSON / Dados
+        </button>
+      </div>
+
+      <!-- Barra de Busca Principal ("Encontre-se na árvore") -->
+      <div class="relative flex-1 max-w-2xl">
+        <div class="relative flex items-center">
+          <svg class="w-4 h-4 text-cyan-600 absolute left-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input 
+            id="root-search-input" 
+            type="text" 
+            autocomplete="off"
+            placeholder="Busque seu nome ou de um familiar para definir como Raiz..."
+            class="w-full bg-white border border-slate-300 focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 rounded-xl pl-10 pr-24 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition shadow-sm"
+          />
+          <div class="absolute right-2 flex items-center gap-1">
+            <button id="btn-random-ego" title="Sortear indivíduo aleatório" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-mono font-medium text-cyan-700 border border-slate-300 transition">
+              Aleatório
+            </button>
+          </div>
+        </div>
+
+        <!-- Dropdown de Autocomplete -->
+        <div id="root-search-results" class="hidden absolute left-0 right-0 mt-1.5 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-xl shadow-xl max-h-80 overflow-y-auto z-50 divide-y divide-slate-100">
+        </div>
+      </div>
+
+      <!-- Controles da Direita: Privacidade Vivos & Esquema JSON -->
+      <div class="hidden lg:flex items-center gap-2.5">
+        <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-slate-300 transition select-none shadow-sm" title="Oculta datas exatas de pessoas vivas (LGPD)">
+          <input id="privacy-toggle" type="checkbox" checked class="sr-only peer">
+          <div class="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:shadow-sm after:transition-all relative peer-checked:bg-emerald-500"></div>
+          <span class="text-xs font-medium text-slate-700">Privacidade Vivos</span>
+        </label>
+
+        <button id="btn-open-schema" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 text-xs font-medium transition shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          <span>Esquema JSON / Testar Arquivo</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Área de Trabalho Principal (Layout de 12 Colunas) -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    
+    <!-- Coluna Esquerda: Viewport do Sub-Grafo Interativo (8 colunas no desktop) -->
+    <section class="lg:col-span-8 flex flex-col gap-3">
+      
+      <!-- Barra de Ferramentas do Grafo -->
+      <div class="glass-panel rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]"></span>
+          <div>
+            <span class="text-[11px] uppercase tracking-wider text-slate-500 font-mono block">Raiz Temporária (Ego)</span>
+            <h2 id="active-ego-title" class="text-sm sm:text-base font-semibold text-slate-900 leading-tight">Carregando...</h2>
+          </div>
+        </div>
+
+        <!-- Controles de Gerações e Viewport -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 bg-slate-100/90 px-3 py-1.5 rounded-xl border border-slate-200">
+            <span class="text-xs text-slate-600 font-medium">Gerações:</span>
+            <input id="depth-slider" type="range" min="1" max="12" value="3" class="w-24 accent-cyan-600 cursor-pointer">
+            <span id="depth-label" class="text-xs font-mono font-semibold text-cyan-700 w-5 text-center">3</span>
+          </div>
+
+          <div class="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200">
+            <button id="btn-zoom-out" class="p-1.5 rounded-lg hover:bg-white text-slate-700 transition" title="Diminuir Zoom">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+            </button>
+            <button id="btn-reset-view" class="px-2 py-1 rounded-lg hover:bg-white text-xs font-mono font-medium text-slate-700 transition" title="Centralizar na Raiz">
+              Centralizar
+            </button>
+            <button id="btn-fit-all" class="px-2 py-1 rounded-lg hover:bg-white text-xs font-mono font-medium text-slate-700 transition" title="Enquadrar a árvore inteira">
+              Ver tudo
+            </button>
+            <button id="btn-zoom-in" class="p-1.5 rounded-lg hover:bg-white text-slate-700 transition" title="Aumentar Zoom">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container Interativo do Canvas SVG -->
+      <div id="graph-container" class="relative w-full h-[520px] sm:h-[620px] rounded-2xl glass-panel observatory-grid overflow-hidden select-none">
+        
+        <!-- Legenda Flutuante -->
+        <div class="absolute top-3 left-3 z-10 flex flex-wrap gap-2 pointer-events-none">
+          <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-cyan-300 shadow-sm text-[11px] font-medium text-cyan-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-600"></span> Raiz Atual
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-slate-200 shadow-sm text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-600"></span> Ancestrais
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-slate-200 shadow-sm text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-600"></span> Cônjuge / Irmãos
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/90 border border-slate-200 shadow-sm text-[11px] font-medium text-slate-700 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Descendentes
+          </span>
+        </div>
+
+        <!-- Dica de Interação Inferior -->
+        <div class="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-lg bg-white/90 border border-slate-200 shadow-sm text-[11px] text-slate-600 pointer-events-none">
+          Arraste para mover • Roda do mouse para zoom • <strong class="text-slate-900">Clique em qualquer pessoa</strong> para torná-la a nova raiz
+        </div>
+
+        <!-- Badge de Estatísticas do Sub-grafo -->
+        <div id="subgraph-badge" class="absolute bottom-3 right-3 z-10 px-3 py-1.5 rounded-lg bg-white/90 border border-slate-200 shadow-sm text-[11px] font-mono font-medium text-emerald-700 pointer-events-none">
+          Sub-grafo: 0 nós • 0ms
+        </div>
+
+        <div id="minimap-wrap" class="hidden sm:block absolute top-3 right-3 z-20 rounded-xl bg-white/90 border border-slate-200 shadow-sm overflow-hidden">
+          <canvas id="minimap" width="200" height="120" class="block cursor-pointer" style="width:200px;height:120px" title="Minimapa: clique ou arraste para navegar"></canvas>
+        </div>
+        <svg id="family-svg" class="w-full h-full cursor-grab active:cursor-grabbing"></svg>
+      </div>
+    </section>
+
+    <!-- Coluna Direita: Dossiê Biográfico, Calculadora BFS e Telemetria (4 colunas no desktop) -->
+    <aside class="lg:col-span-4 flex flex-col gap-4">
+      
+      <!-- 1. Cartão de Dossiê do Indivíduo Ativo -->
+      <div class="glass-panel rounded-2xl p-4">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <span id="bio-id-badge" class="text-[11px] font-mono font-medium text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-md">ID: #0000</span>
+            <h3 id="bio-name" class="text-lg font-bold text-slate-900 mt-1.5">Nome do Indivíduo</h3>
+            <p id="bio-lifespan" class="text-xs font-mono text-slate-500 mt-0.5">1950 — Presente</p>
+          </div>
+          <span id="bio-status-pill" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Vivo(a)
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 my-3 text-xs">
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-slate-500 block text-[11px]">Local de Origem</span>
+            <span id="bio-location" class="text-slate-800 font-medium mt-0.5 block truncate">São Paulo, SP</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <span class="text-slate-500 block text-[11px]">Geração na Base</span>
+            <span id="bio-generation" class="text-slate-800 font-mono font-medium mt-0.5 block">Geração 4</span>
+          </div>
+        </div>
+
+        <!-- Links Rápidos para Familiares Diretos -->
+        <div class="space-y-2 pt-2 border-t border-slate-200/80 text-xs">
+          <div id="bio-parents-row" class="flex flex-wrap items-center gap-1.5">
+            <span class="text-slate-500 font-medium w-16 shrink-0">Pais:</span>
+            <div id="bio-parents-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+          <div id="bio-spouses-row" class="flex flex-wrap items-center gap-1.5">
+            <span class="text-slate-500 font-medium w-16 shrink-0">Cônjuge:</span>
+            <div id="bio-spouses-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+          <div id="bio-children-row" class="flex flex-wrap items-center gap-1.5">
+            <span class="text-slate-500 font-medium w-16 shrink-0">Filhos:</span>
+            <div id="bio-children-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Calculadora de Parentesco (BFS em todos os 5.000+ nós) -->
+      <div class="glass-panel rounded-2xl p-4 relative z-30">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <h3 class="text-sm font-semibold text-slate-900">Calculadora de Parentesco</h3>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500">Toda a base</span>
+        </div>
+        <p class="text-xs text-slate-600 mb-3">
+          Descubra o caminho exato entre <strong id="kinship-ego-name" class="text-cyan-700">a raiz atual</strong> e qualquer outro familiar:
+        </p>
+
+        <div class="relative">
+          <input 
+            id="kinship-search-input" 
+            type="text" 
+            autocomplete="off"
+            placeholder="Comparar parentesco com..."
+            class="w-full bg-white border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none transition shadow-sm"
+          />
+          <div id="kinship-search-results" class="hidden absolute left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100"></div>
+        </div>
+
+        <!-- Caixa de Resultado do Parentesco -->
+        <div id="kinship-result-box" class="hidden mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-300">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="kinship-label" class="text-xs font-bold text-amber-800 uppercase tracking-wide">Primo(a) de 2º Grau</span>
+            <span id="kinship-hops" class="text-[11px] font-mono text-slate-600">4 passos • 1.2ms</span>
+          </div>
+          <p id="kinship-sentence" class="text-xs text-slate-700 mt-1"></p>
+          <div id="kinship-chain" class="flex flex-wrap items-center gap-1 text-[11px] text-slate-700 mt-2">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Telemetria da Linhagem -->
+      <div class="glass-panel rounded-2xl p-4 flex-1">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-slate-900">Telemetria da Linhagem</h3>
+          <span class="text-[10px] font-mono font-medium text-cyan-700">DADOS DEMOGRÁFICOS</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] text-slate-500 block">Ancestrais</span>
+            <span id="stat-ancestors" class="text-base font-mono font-bold text-indigo-600">0</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] text-slate-500 block">Descendentes</span>
+            <span id="stat-descendants" class="text-base font-mono font-bold text-emerald-600">0</span>
+          </div>
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+            <span class="text-[10px] text-slate-500 block">Longevidade</span>
+            <span id="stat-lifespan" class="text-base font-mono font-bold text-cyan-600">--</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-medium text-slate-600 block mb-2">Principais Origens Geográficas (Sub-rede)</span>
+          <div id="stat-locations-bars" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- Modal: Esquema JSON e Upload de Arquivo Personalizado -->
+  <div id="schema-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900">Integração GEDCOM &rarr; JSON</h3>
+          <p class="text-xs text-slate-500">Estrutura otimizada para 5.000 a 15.000+ indivíduos no navegador</p>
+        </div>
+        <button id="btn-close-schema" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-xs text-slate-600">
+        <p>
+          Para manter o site ultrarrápido sem servidor, o script Python deve converter seu <code class="text-cyan-700 bg-cyan-50 px-1 py-0.5 rounded font-mono">.ged</code> para um dicionário indexado por ID (<code class="text-cyan-700 bg-cyan-50 px-1 py-0.5 rounded font-mono">individuals</code>). Isso garante busca em tempo constante <strong class="text-slate-900">O(1)</strong>.
+        </p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-[11px] text-emerald-700 overflow-x-auto">
+<pre>{
+  "meta": { "familyName": "Família Silva & Rossi", "generatedAt": "2026-11-16" },
+  "individuals": {
+    "I0001": {
+      "id": "I0001",
+      "name": "Antonio Carlos Silva",
+      "sex": "M",
+      "birthYear": 1948,
+      "deathYear": null,
+      "isLiving": true,
+      "place": "Campinas, SP",
+      "fatherId": "I0012",
+      "motherId": "I0013",
+      "spouseIds": ["I0002"],
+      "childrenIds": ["I0003", "I0004"]
+    }
+  }
+}</pre>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-200">
+          <div>
+            <span class="font-semibold text-slate-900 block">Testar seu próprio arquivo JSON agora:</span>
+            <span class="text-slate-500 text-[11px]">O arquivo é processado 100% localmente no seu navegador.</span>
+          </div>
+          <label class="cursor-pointer px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-center transition shadow-sm">
+            Carregar familia.json
+            <input id="json-file-input" type="file" accept=".json" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Caixa de Notificação Toast (Sem uso de alert()) -->
+  <div id="toast-box" class="fixed bottom-4 right-4 z-50 hidden px-4 py-2.5 rounded-xl bg-white border border-cyan-500/50 text-xs font-medium text-slate-800 shadow-lg"></div>
+
+  <script>
+    /**
+     * ============================================================================
+     * OBSERVATÓRIO GENEALÓGICO — MOTOR DE GRAFOS EGO-CÊNTRICOS (5K–10K+ ESCALA)
+     * ============================================================================
+     * Arquitetura:
+     * 1. Armazenamento indexado O(1) via Object (`individuals[id]`).
+     * 2. Extração de Sub-grafo Local (Ego-Network): Apenas ancestrais até N níveis,
+     *    cônjuges, irmãos e descendentes até N níveis são renderizados no SVG.
+     * 3. Calculadora de Parentesco via BFS (Busca em Largura) capaz de cruzar
+     *    toda a rede de 5.000+ indivíduos em poucos milissegundos.
+     */
+
+    const AppState = {
+      individuals: {},      // Dicionário { id: PersonObject }
+      searchIndex: [],      // Array pré-normalizado para busca instantânea em 10k+ nomes
+      rootId: null,         // ID da "Raiz Temporária" (Ego ativo)
+      depth: 3,             // Profundidade de gerações exibidas no sub-grafo
+      privacyMode: true,    // Oculta datas exatas de pessoas vivas (LGPD)
+      transform: { x: 0, y: 0, scale: 1 },
+      isDragging: false,
+      dragStart: { x: 0, y: 0 }
+    };
+
+    // ============================================================================
+    // 1. CARGA DA BASE FAMILIAR (familia.json EMBUTIDO NA PÁGINA)
+    // ============================================================================
+    function isValidId(id) { return id !== null && id !== undefined && String(id).trim() !== ''; }
+
+    function cleanPlace(v) {
+      const s = v ? String(v).trim() : '';
+      if (!s || normalizeText(s) === 'local nao registrado') return '';
+      const fix = { 'Brazil': 'Brasil', 'Ceara': 'Ceará', 'Paraiba': 'Paraíba' };
+      return s.split(',').map(x => x.trim()).filter(Boolean).map(x => fix[x] || x).join(', ');
+    }
+
+    function prepareIndividuals(rawInds) {
+      const items = Array.isArray(rawInds)
+        ? rawInds
+        : Object.entries(rawInds).map(([k, v]) => ({ ...v, id: isValidId(v && v.id) ? v.id : k }));
+      const map = {};
+      const num = v => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v))) ? null : Number(v);
+      const ids = arr => Array.isArray(arr) ? [...new Set(arr.filter(isValidId).map(x => String(x).trim()))] : [];
+      items.forEach(r => {
+        if (!r || !isValidId(r.id)) return;
+        const id = String(r.id).trim();
+        const by = num(r.birthYear), dy = num(r.deathYear);
+        map[id] = {
+          id,
+          name: r.name ? String(r.name).trim() : `Indivíduo ${id}`,
+          sex: r.sex === 'M' || r.sex === 'F' ? r.sex : 'U',
+          birthYear: by, deathYear: dy,
+          isLiving: typeof r.isLiving === 'boolean' ? r.isLiving : (dy === null && (by === null || by > 1925)),
+          place: cleanPlace(r.place),
+          generation: null,
+          fatherId: isValidId(r.fatherId) ? String(r.fatherId).trim() : null,
+          motherId: isValidId(r.motherId) ? String(r.motherId).trim() : null,
+          spouseIds: ids(r.spouseIds),
+          childrenIds: ids(r.childrenIds)
+        };
+      });
+      const list = Object.values(map);
+      // Integridade bidirecional (pais <-> filhos, cônjuges <-> cônjuges)
+      list.forEach(p => {
+        [p.fatherId, p.motherId].forEach(pid => {
+          if (pid && map[pid] && !map[pid].childrenIds.includes(p.id)) map[pid].childrenIds.push(p.id);
+        });
+        p.spouseIds.forEach(sid => {
+          if (map[sid] && !map[sid].spouseIds.includes(p.id)) map[sid].spouseIds.push(p.id);
+        });
+      });
+      list.forEach(p => p.childrenIds.sort((a, b) => ((map[a] && map[a].birthYear) || 9999) - ((map[b] && map[b].birthYear) || 9999)));
+      // Gerações recalculadas pela estrutura: filho = 1 + maior geração dos pais; cônjuge sem pais acompanha o parceiro
+      const parentsOf = p => [p.fatherId, p.motherId].filter(id => id && map[id]);
+      list.forEach(p => { p.generation = 1; });
+      for (let iter = 0; iter < 80; iter++) {
+        let changed = false;
+        for (const p of list) {
+          const ps = parentsOf(p);
+          let g = 1;
+          if (ps.length) g = 1 + Math.max(...ps.map(id => map[id].generation));
+          else {
+            const sp = p.spouseIds.filter(id => map[id] && parentsOf(map[id]).length);
+            if (sp.length) g = Math.max(...sp.map(id => map[id].generation));
+          }
+          g = Math.min(g, 60);
+          if (g !== p.generation) { p.generation = g; changed = true; }
+        }
+        if (!changed) break;
+      }
+      return map;
+    }
+
+    function loadFamilyData(raw) {
+      const src = raw && raw.individuals ? raw.individuals : raw;
+      const map = prepareIndividuals(src || {});
+      if (Object.keys(map).length === 0) throw new Error('JSON vazio');
+      buildSearchIndex(map);
+      AppState.meta = (raw && raw.meta) || {};
+      return map;
+    }
+
+    function pickStartId(map) { return map['0'] ? '0' : Object.keys(map)[0]; }
+
+    // ============================================================================
+    // 2. INDEXAÇÃO DE BUSCA RÁPIDA (PARA 5K - 10K+ NOMES)
+    // ============================================================================
+    function normalizeText(str) {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
+    function buildSearchIndex(individuals) {
+      AppState.individuals = individuals;
+      AppState.searchIndex = Object.values(individuals).map(p => ({
+        id: p.id,
+        name: p.name,
+        normName: normalizeText(p.name),
+        birthYear: p.birthYear,
+        place: p.place || "Local desconhecido"
+      }));
+    }
+
+    function searchPeople(query, limit = 15) {
+      const q = normalizeText(query.trim());
+      if (!q) return [];
+      const terms = q.split(/\s+/);
+      const results = [];
+
+      for (let i = 0; i < AppState.searchIndex.length; i++) {
+        const item = AppState.searchIndex[i];
+        let match = true;
+        for (let t = 0; t < terms.length; t++) {
+          if (!item.normName.includes(terms[t]) && !item.id.toLowerCase().includes(terms[t])) {
+            match = false;
+            break;
+          }
+        }
+        if (match) {
+          results.push(item);
+          if (results.length >= limit) break;
+        }
+      }
+      return results;
+    }
+
+    // ============================================================================
+    // 3. EXTRAÇÃO DE SUB-GRAFO EGO-CÊNTRICO (VIEWPORT VIRTUALIZATION)
+    // ============================================================================
+    function extractEgoSubgraph(rootId, maxDepth) {
+      const ind = AppState.individuals;
+      const root = ind[rootId];
+      if (!root) return { nodes: [], edges: [], info: { shownDescDepth: 0, availableDescDepth: 0, capped: false } };
+
+      const X_GAP = 190, Y_GAP = 128;
+      const nodesMap = new Map();
+      const edges = [];
+      const addNode = (person, role, x, y, level, hidden) => {
+        if (!person || nodesMap.has(person.id)) return;
+        nodesMap.set(person.id, { ...person, role, x, y, level, hidden: hidden || 0 });
+      };
+      const validCount = ids => ids.filter(z => z && ind[z]).length;
+
+      // 1. Raiz (ego) em (0, 0)
+      addNode(root, 'ego', 0, 0, 0);
+
+      // 2. Cônjuges à direita
+      let k = 0;
+      (root.spouseIds || []).forEach(sid => {
+        const sp = ind[sid];
+        if (!sp) return;
+        k++;
+        addNode(sp, 'spouse', k * X_GAP, 0, 0);
+        edges.push({ from: root.id, to: sp.id, type: 'spouse' });
+      });
+
+      // 3. Irmãos à esquerda (do mais velho, longe, ao mais novo, perto da raiz)
+      const sibs = [];
+      const sibSeen = new Set([root.id]);
+      [root.fatherId, root.motherId].forEach(pid => {
+        const parent = ind[pid];
+        if (parent) (parent.childrenIds || []).forEach(cid => {
+          if (ind[cid] && !sibSeen.has(cid)) { sibSeen.add(cid); sibs.push(cid); }
+        });
+      });
+      sibs.slice(0, 12).forEach((sid, i, arr) => {
+        addNode(ind[sid], 'sibling', -(arr.length - i) * X_GAP, 0, 0);
+        edges.push({ from: root.id, to: sid, type: 'sibling' });
+      });
+
+      // 4. Ancestrais: árvore espelhada, pais centralizados sobre os filhos (sem sobreposição)
+      const ancX = new Map([[root.id, 0]]);
+      const ancList = [];
+      let aSlot = 0;
+      const placeAnc = (pid, d) => {
+        const p = ind[pid];
+        const pars = d < maxDepth ? [p.fatherId, p.motherId].filter(x => x && ind[x]) : [];
+        const xs = [];
+        pars.forEach(id => {
+          edges.push({ from: id, to: pid, type: 'parent' });
+          if (ancX.has(id)) return;
+          ancX.set(id, 0);
+          const x = placeAnc(id, d + 1);
+          ancX.set(id, x);
+          ancList.push({ id, d: d + 1, x, hidden: d + 1 === maxDepth ? validCount([ind[id].fatherId, ind[id].motherId]) : 0 });
+          xs.push(x);
+        });
+        return xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : aSlot++ * X_GAP;
+      };
+      const egoAncX = placeAnc(root.id, 0);
+      ancList.forEach(a => addNode(ind[a.id], 'ancestor', a.x - egoAncX, -a.d * Y_GAP, -a.d, a.hidden));
+
+      // 5. Descendentes: árvore com filhos agrupados sob o pai/mãe; limite de segurança de nós
+      const MAX_DESC_NODES = 6000;
+      const levelCounts = [];
+      {
+        const seen0 = new Set([root.id]);
+        let level = [root.id];
+        for (let d = 1; d <= maxDepth; d++) {
+          const next = [];
+          level.forEach(pid => (ind[pid].childrenIds || []).forEach(cid => {
+            if (ind[cid] && !seen0.has(cid)) { seen0.add(cid); next.push(cid); }
+          }));
+          if (!next.length) break;
+          levelCounts.push(next.length);
+          level = next;
+        }
+      }
+      let descDepth = 0, running = 0;
+      for (let i = 0; i < levelCounts.length; i++) {
+        if (descDepth >= 1 && running + levelCounts[i] > MAX_DESC_NODES) break;
+        running += levelCounts[i];
+        descDepth = i + 1;
+      }
+      if (descDepth > 0) {
+        const seen = new Set([root.id]);
+        const placed = [];
+        let slot = 0;
+        const place = (pid, d, parentId) => {
+          const kids = d < descDepth ? (ind[pid].childrenIds || []).filter(c => ind[c] && !seen.has(c)) : [];
+          kids.forEach(c => seen.add(c));
+          let x;
+          if (!kids.length) x = slot++ * X_GAP;
+          else { const xs = kids.map(c => place(c, d + 1, pid)); x = (xs[0] + xs[xs.length - 1]) / 2; }
+          placed.push({ id: pid, d, x, parentId, hidden: d === descDepth ? validCount(ind[pid].childrenIds || []) : 0 });
+          return x;
+        };
+        const rootKids = (root.childrenIds || []).filter(c => ind[c]);
+        rootKids.forEach(c => seen.add(c));
+        const rx = rootKids.map(c => place(c, 1, root.id));
+        const shift = (rx[0] + rx[rx.length - 1]) / 2;
+        placed.forEach(n => {
+          addNode(ind[n.id], 'descendant', n.x - shift, n.d * Y_GAP, n.d, n.hidden);
+          edges.push({ from: n.parentId, to: n.id, type: 'parent' });
+        });
+      }
+
+      return {
+        nodes: Array.from(nodesMap.values()),
+        edges,
+        info: { shownDescDepth: descDepth, availableDescDepth: levelCounts.length, capped: descDepth < Math.min(maxDepth, levelCounts.length) }
+      };
+    }
+
+    // ============================================================================
+    // 4. RENDERIZAÇÃO DO GRAFO SVG (MODO CLARO) & CONTROLES DE PAN/ZOOM
+    // ============================================================================
+    function formatLifespan(person) {
+      if (person.isLiving && AppState.privacyMode) {
+        return "Vivo(a) • Privacidade ativa";
+      }
+      const b = person.birthYear || "?";
+      const d = person.isLiving ? "Presente" : (person.deathYear || "?");
+      return `${b} — ${d}`;
+    }
+
+    const CARD_W = 168, CARD_H = 56;
+    const ROLE_COLORS = { ego: '#0891b2', ancestor: '#4f46e5', descendant: '#059669', spouse: '#d97706', sibling: '#db2777' };
+
+    function renderGraph() {
+      const t0 = performance.now();
+      const { nodes, edges, info } = extractEgoSubgraph(AppState.rootId, AppState.depth);
+      const nodeById = {};
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      nodes.forEach(n => {
+        nodeById[n.id] = n;
+        if (n.x - CARD_W / 2 < minX) minX = n.x - CARD_W / 2;
+        if (n.x + CARD_W / 2 > maxX) maxX = n.x + CARD_W / 2;
+        if (n.y - CARD_H / 2 < minY) minY = n.y - CARD_H / 2;
+        if (n.y + CARD_H / 2 > maxY) maxY = n.y + CARD_H / 2;
+      });
+      AppState.graph = { nodes, edges, nodeById, bounds: { minX, maxX, minY, maxY } };
+      AppState.drawn = null;
+      document.getElementById('family-svg').innerHTML = '<g id="viewport-group"><g id="edges-layer"></g><g id="nodes-layer"></g></g>';
+      buildMinimapCache();
+      const elapsed = (performance.now() - t0).toFixed(1);
+      let badge = `Sub-grafo: ${nodes.length.toLocaleString('pt-BR')} nós • ${elapsed}ms`;
+      if (info && info.capped) badge += ` • descendentes limitados a ${info.shownDescDepth} ger.`;
+      document.getElementById('subgraph-badge').textContent = badge;
+      updateTelemetryHeader(nodes.length.toLocaleString('pt-BR'), elapsed);
+      updateLineageAnalytics(nodes);
+    }
+
+    function currentView() {
+      const r = document.getElementById('graph-container').getBoundingClientRect();
+      const t = AppState.transform;
+      return { w: r.width, h: r.height, minX: -t.x / t.scale, maxX: (r.width - t.x) / t.scale, minY: -t.y / t.scale, maxY: (r.height - t.y) / t.scale };
+    }
+    function lodTier(s) { return s >= 0.38 ? 2 : (s >= 0.1 ? 1 : 0); }
+
+    function nodeSvg(n, tier) {
+      const c = ROLE_COLORS[n.role] || ROLE_COLORS.ancestor;
+      const x = n.x - CARD_W / 2, y = n.y - CARD_H / 2;
+      const id = escapeHtml(n.id);
+      if (tier === 0) {
+        return `<g class="node-card" data-id="${id}"><rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="10" fill="${c}" opacity="${n.role === 'ego' ? 1 : 0.85}"/></g>`;
+      }
+      if (tier === 1) {
+        return `<g class="node-card" data-id="${id}"><rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="11" fill="${n.role === 'ego' ? '#cffafe' : '#fff'}" stroke="${c}" stroke-width="${n.role === 'ego' ? 3 : 1.5}" vector-effect="non-scaling-stroke"/><rect x="${x}" y="${y}" width="16" height="${CARD_H}" rx="8" fill="${c}"/></g>`;
+      }
+      const shortName = n.name.length > 21 ? n.name.slice(0, 19) + '…' : n.name;
+      const sub = (n.isLiving && AppState.privacyMode && n.role !== 'ego')
+        ? 'Dados protegidos'
+        : [n.birthYear || '?', (n.place || '').split(',')[0]].filter(Boolean).join(' • ');
+      const pill = n.hidden ? `<g transform="translate(${CARD_W / 2 - 22}, ${CARD_H - 5})"><rect width="44" height="16" rx="8" fill="${c}"/><text x="22" y="11.5" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="700" font-family="JetBrains Mono, monospace">${n.hidden > 99 ? '99+' : n.hidden} ${n.role === 'ancestor' ? '↑' : '↓'}</text></g>` : '';
+      return `<g class="node-card" data-id="${id}" transform="translate(${x}, ${y})">
+        ${n.role === 'ego' ? `<rect x="-4" y="-4" width="${CARD_W + 8}" height="${CARD_H + 8}" rx="14" fill="none" stroke="#06b6d4" stroke-width="1.8" class="ego-pulse" />` : ''}
+        <rect width="${CARD_W}" height="${CARD_H}" rx="11" fill="#ffffff" stroke="${c}" stroke-width="${n.role === 'ego' ? 2.2 : 1.4}" />
+        <circle cx="14" cy="20" r="4" fill="${c}" />
+        <text x="24" y="24" fill="#0f172a" font-size="11.5" font-weight="600" font-family="Inter, sans-serif">${escapeHtml(shortName)}</text>
+        <text x="14" y="42" fill="#64748b" font-size="10" font-family="JetBrains Mono, monospace">${escapeHtml(sub)}</text>
+        ${pill}
+      </g>`;
+    }
+
+    // Desenha apenas o que está (ou quase está) na tela, com nível de detalhe conforme o zoom
+    function drawGraph() {
+      const g = AppState.graph;
+      if (!g) return;
+      const v = currentView(), tier = lodTier(AppState.transform.scale);
+      const mx = (v.maxX - v.minX) * 0.5, my = (v.maxY - v.minY) * 0.5;
+      const reg = { minX: v.minX - mx, maxX: v.maxX + mx, minY: v.minY - my, maxY: v.maxY + my };
+      const ve = tier < 2 ? ' vector-effect="non-scaling-stroke"' : '';
+      const hw = CARD_W / 2, hh = CARD_H / 2;
+      let eh = '';
+      g.edges.forEach(e => {
+        const a = g.nodeById[e.from], b = g.nodeById[e.to];
+        if (!a || !b) return;
+        if (Math.max(a.x, b.x) + hw < reg.minX || Math.min(a.x, b.x) - hw > reg.maxX || Math.max(a.y, b.y) + hh < reg.minY || Math.min(a.y, b.y) - hh > reg.maxY) return;
+        if (e.type === 'spouse' || e.type === 'sibling') {
+          const dir = b.x >= a.x ? 1 : -1;
+          const stroke = e.type === 'spouse' ? '#d97706' : '#94a3b8';
+          eh += `<line x1="${a.x + dir * hw}" y1="${a.y}" x2="${b.x - dir * hw}" y2="${b.y}" stroke="${stroke}" stroke-width="${tier < 2 ? 1 : 2}" stroke-dasharray="${e.type === 'spouse' ? '4 4' : '2 3'}" opacity="0.85"${ve} />`;
+        } else {
+          const y1 = a.y + hh, y2 = b.y - hh, midY = (y1 + y2) / 2;
+          eh += `<path d="M ${a.x} ${y1} C ${a.x} ${midY}, ${b.x} ${midY}, ${b.x} ${y2}" fill="none" stroke="#94a3b8" stroke-width="${tier < 2 ? 1 : 1.8}"${ve} />`;
+        }
+      });
+      let nh = '';
+      g.nodes.forEach(n => {
+        if (n.role !== 'ego' && (n.x + hw < reg.minX || n.x - hw > reg.maxX || n.y + hh < reg.minY || n.y - hh > reg.maxY)) return;
+        nh += nodeSvg(n, tier);
+      });
+      document.getElementById('edges-layer').innerHTML = eh;
+      document.getElementById('nodes-layer').innerHTML = nh;
+      AppState.drawn = { reg, tier };
+    }
+
+    function applyViewportTransform() {
+      const g = document.getElementById('viewport-group');
+      if (g) g.setAttribute('transform', `translate(${AppState.transform.x}, ${AppState.transform.y}) scale(${AppState.transform.scale})`);
+    }
+
+    function requestDraw(force) {
+      AppState._force = AppState._force || !!force;
+      if (AppState._raf) return;
+      AppState._raf = requestAnimationFrame(() => {
+        AppState._raf = 0;
+        applyViewportTransform();
+        const d = AppState.drawn;
+        let need = AppState._force || !d;
+        AppState._force = false;
+        if (!need) {
+          const v = currentView();
+          need = v.minX < d.reg.minX || v.maxX > d.reg.maxX || v.minY < d.reg.minY || v.maxY > d.reg.maxY || lodTier(AppState.transform.scale) !== d.tier;
+        }
+        if (need) drawGraph();
+        drawMinimap();
+      });
+    }
+
+    function zoomAt(f, cx, cy) {
+      const t = AppState.transform;
+      const ns = Math.min(3, Math.max(0.003, t.scale * f)), k = ns / t.scale;
+      AppState.transform = { scale: ns, x: cx - (cx - t.x) * k, y: cy - (cy - t.y) * k };
+      requestDraw();
+    }
+
+    function fitAll() {
+      const g = AppState.graph;
+      if (!g) return;
+      const v = currentView(), b = g.bounds, pad = 48;
+      const bw = Math.max(1, b.maxX - b.minX), bh = Math.max(1, b.maxY - b.minY);
+      const s = Math.min(1, (v.w - pad * 2) / bw, (v.h - pad * 2) / bh);
+      AppState.transform = { scale: s, x: v.w / 2 - (b.minX + bw / 2) * s, y: v.h / 2 - (b.minY + bh / 2) * s };
+      requestDraw(true);
+    }
+
+    function goToRoot(scale) {
+      const v = currentView();
+      AppState.transform = { scale: scale || 0.8, x: v.w / 2, y: v.h * 0.42 };
+      requestDraw(true);
+    }
+
+    // Visão inicial: a árvore inteira, se ainda ficar legível; senão, foco na raiz (use "Ver tudo" para a visão geral)
+    function fitGraphViewport() {
+      const g = AppState.graph;
+      if (!g) return;
+      const v = currentView(), b = g.bounds, pad = 48;
+      const fit = Math.min(1, (v.w - pad * 2) / Math.max(1, b.maxX - b.minX), (v.h - pad * 2) / Math.max(1, b.maxY - b.minY));
+      if (fit >= 0.45) fitAll(); else goToRoot(0.7);
+    }
+
+    function buildMinimapCache() {
+      const g = AppState.graph, cv = document.getElementById('minimap');
+      if (!g || !cv) return;
+      const W = cv.width, H = cv.height, b = g.bounds, pad = 8;
+      const bw = Math.max(1, b.maxX - b.minX), bh = Math.max(1, b.maxY - b.minY);
+      const s = Math.min((W - pad * 2) / bw, (H - pad * 2) / bh);
+      const ox = (W - bw * s) / 2 - b.minX * s, oy = (H - bh * s) / 2 - b.minY * s;
+      const off = document.createElement('canvas');
+      off.width = W; off.height = H;
+      const c = off.getContext('2d');
+      g.nodes.forEach(n => { c.fillStyle = ROLE_COLORS[n.role] || '#4f46e5'; c.fillRect(n.x * s + ox - 1.2, n.y * s + oy - 1.2, 2.6, 2.6); });
+      AppState.mini = { off, s, ox, oy, W, H };
+    }
+
+    function drawMinimap() {
+      const m = AppState.mini, cv = document.getElementById('minimap');
+      if (!m || !cv) return;
+      const c = cv.getContext('2d');
+      c.clearRect(0, 0, m.W, m.H);
+      c.drawImage(m.off, 0, 0);
+      const v = currentView();
+      const x = v.minX * m.s + m.ox, y = v.minY * m.s + m.oy, w = (v.maxX - v.minX) * m.s, h = (v.maxY - v.minY) * m.s;
+      c.fillStyle = 'rgba(6,182,212,0.10)'; c.strokeStyle = '#0891b2'; c.lineWidth = 1.5;
+      c.fillRect(x, y, w, h); c.strokeRect(x, y, w, h);
+    }
+
+    function setupGraphInteractions() {
+      const gc = document.getElementById('graph-container');
+      const center = () => { const r = gc.getBoundingClientRect(); return { x: r.width / 2, y: r.height / 2 }; };
+      document.getElementById('btn-zoom-in').addEventListener('click', () => { const c = center(); zoomAt(1.35, c.x, c.y); });
+      document.getElementById('btn-zoom-out').addEventListener('click', () => { const c = center(); zoomAt(1 / 1.35, c.x, c.y); });
+      document.getElementById('btn-reset-view').addEventListener('click', () => goToRoot(0.8));
+      document.getElementById('btn-fit-all').addEventListener('click', fitAll);
+      window.addEventListener('resize', () => requestDraw(true));
+
+      gc.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const r = gc.getBoundingClientRect();
+        zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018)), e.clientX - r.left, e.clientY - r.top);
+      }, { passive: false });
+
+      // Ponteiros unificados (mouse, toque, caneta): arrastar, pinça e clique em cartão
+      const pts = new Map();
+      let pinchDist = 0, downNode = null, moved = 0;
+      gc.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('#minimap-wrap')) return;
+        gc.setPointerCapture(e.pointerId);
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pts.size === 1) { downNode = e.target.closest('.node-card'); moved = 0; }
+        if (pts.size === 2) {
+          const [a, b] = [...pts.values()];
+          pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+          downNode = null;
+        }
+      });
+      gc.addEventListener('pointermove', (e) => {
+        const prev = pts.get(e.pointerId);
+        if (!prev) return;
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pts.size === 2) {
+          const [a, b] = [...pts.values()];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (pinchDist > 0) {
+            const r = gc.getBoundingClientRect();
+            zoomAt(d / pinchDist, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+          }
+          pinchDist = d;
+        } else if (pts.size === 1) {
+          const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+          moved += Math.abs(dx) + Math.abs(dy);
+          AppState.transform = { ...AppState.transform, x: AppState.transform.x + dx, y: AppState.transform.y + dy };
+          requestDraw();
+        }
+      });
+      const endPointer = (e) => {
+        if (!pts.has(e.pointerId)) return;
+        const wasSingle = pts.size === 1;
+        pts.delete(e.pointerId);
+        if (pts.size < 2) pinchDist = 0;
+        if (wasSingle && e.type === 'pointerup' && downNode && moved < 6) {
+          const id = downNode.getAttribute('data-id');
+          if (id && id !== AppState.rootId) setRootPerson(id);
+        }
+        if (pts.size === 0) downNode = null;
+      };
+      gc.addEventListener('pointerup', endPointer);
+      gc.addEventListener('pointercancel', endPointer);
+
+      // Minimapa: clique ou arraste para navegar
+      const mini = document.getElementById('minimap');
+      let miniDrag = false;
+      const jump = (e) => {
+        const m = AppState.mini;
+        if (!m) return;
+        const r = mini.getBoundingClientRect();
+        const gx = ((e.clientX - r.left) * (m.W / r.width) - m.ox) / m.s;
+        const gy = ((e.clientY - r.top) * (m.H / r.height) - m.oy) / m.s;
+        const v = currentView(), s = AppState.transform.scale;
+        AppState.transform = { scale: s, x: v.w / 2 - gx * s, y: v.h / 2 - gy * s };
+        requestDraw();
+      };
+      mini.addEventListener('pointerdown', (e) => { e.stopPropagation(); mini.setPointerCapture(e.pointerId); miniDrag = true; jump(e); });
+      mini.addEventListener('pointermove', (e) => { if (miniDrag) jump(e); });
+      mini.addEventListener('pointerup', () => { miniDrag = false; });
+      mini.addEventListener('pointercancel', () => { miniDrag = false; });
+    }
+
+    // ============================================================================
+    // 5. CALCULADORA DE PARENTESCO (BFS EM TODA A REDE DE 5.000+ INDIVÍDUOS)
+    // ============================================================================
+    const appState = AppState;
+
+    // ----------------------------------------------------------------------------
+    // 4. KINSHIP ENGINE (BFS + LCA + PORTUGUESE GENEALOGICAL NOMENCLATURE)
+    // ----------------------------------------------------------------------------
+    function calculateKinship(id1, id2) {
+      const p1 = appState.individuals[String(id1)];
+      const p2 = appState.individuals[String(id2)];
+      if (!p1 || !p2) return null;
+
+      if (p1.id === p2.id) {
+        return {
+          p1,
+          p2,
+          isSamePerson: true,
+          primaryTitle: "A mesma pessoa",
+          p1ToP2: "é a mesma pessoa que",
+          p2ToP1: "é a mesma pessoa que",
+          bloodInfo: null,
+          chain: [{ person: p1, edgeFromPrev: null }]
+        };
+      }
+
+      // A. Find Blood Ancestors for both P1 and P2 (pure upward parent edges)
+      const ancestors1 = getBloodAncestorsMap(p1.id); // Map<ancestorId, { dist, pathFromPerson }>
+      const ancestors2 = getBloodAncestorsMap(p2.id);
+
+      let bestLCA = null;
+      ancestors1.forEach((info1, ancId) => {
+        if (ancestors2.has(ancId)) {
+          const info2 = ancestors2.get(ancId);
+          const totalDist = info1.dist + info2.dist;
+          if (
+            !bestLCA ||
+            totalDist < bestLCA.totalDist ||
+            (totalDist === bestLCA.totalDist && Math.abs(info1.dist - info2.dist) < Math.abs(bestLCA.up - bestLCA.down))
+          ) {
+            bestLCA = {
+              ancestor: appState.individuals[ancId],
+              up: info1.dist,
+              down: info2.dist,
+              totalDist,
+              path1ToAnc: info1.path,
+              path2ToAnc: info2.path
+            };
+          }
+        }
+      });
+
+      // Check if they share BOTH parents (full siblings vs half-siblings)
+      let isFullSibling = false;
+      if (bestLCA && bestLCA.up === 1 && bestLCA.down === 1) {
+        const sameFather = isValidId(p1.fatherId) && p1.fatherId === p2.fatherId;
+        const sameMother = isValidId(p1.motherId) && p1.motherId === p2.motherId;
+        isFullSibling = sameFather && sameMother;
+      }
+
+      // B. Shortest Overall Path via BFS (parent, child, spouse edges)
+      const shortestPath = findShortestNetworkPath(p1.id, p2.id);
+
+      // Build Blood Relationship Description if common ancestor exists
+      let bloodResult = null;
+      if (bestLCA) {
+        const { up, down, ancestor, path1ToAnc, path2ToAnc } = bestLCA;
+        const relP1ToP2 = translateBloodTerm(up, down, p1.sex, isFullSibling);
+        const relP2ToP1 = translateBloodTerm(down, up, p2.sex, isFullSibling);
+        const summaryTitle = formatBloodSummaryTitle(up, down, p1.sex, p2.sex, isFullSibling);
+
+        // Construct chain from P1 -> LCA -> P2
+        const chain = [];
+        for (let i = 0; i < path1ToAnc.length; i++) {
+          const curr = appState.individuals[path1ToAnc[i]];
+          const prev = i > 0 ? appState.individuals[path1ToAnc[i - 1]] : null;
+          let edgeLabel = null;
+          if (prev) {
+            edgeLabel = prev.fatherId === curr.id ? 'Pai' : (prev.motherId === curr.id ? 'Mãe' : 'Ascendente');
+          }
+          chain.push({ person: curr, edgeFromPrev: edgeLabel });
+        }
+        // Append downward path from LCA (skip index 0 which is LCA itself)
+        for (let i = path2ToAnc.length - 2; i >= 0; i--) {
+          const curr = appState.individuals[path2ToAnc[i]];
+          const edgeLabel = curr.sex === 'F' ? 'Filha' : (curr.sex === 'M' ? 'Filho' : 'Filho(a)');
+          chain.push({ person: curr, edgeFromPrev: edgeLabel });
+        }
+
+        bloodResult = {
+          title: summaryTitle,
+          p1ToP2: relP1ToP2,
+          p2ToP1: relP2ToP1,
+          up,
+          down,
+          ancestor,
+          isFullSibling,
+          chain
+        };
+      }
+
+      // Build Affinal / General Network Path Description
+      let networkResult = null;
+      if (shortestPath) {
+        const affinal = classifyAffinalChain(shortestPath, p1, p2);
+        networkResult = {
+          title: affinal.title,
+          p1ToP2: affinal.p1ToP2,
+          p2ToP1: affinal.p2ToP1,
+          chain: shortestPath
+        };
+      }
+
+      // Determine primary display
+      if (!bloodResult && !networkResult) {
+        return {
+          p1,
+          p2,
+          disconnected: true,
+          primaryTitle: "Sem vínculo registrado",
+          p1ToP2: "não possui conexão genealógica mapeada com",
+          p2ToP1: "não possui conexão genealógica mapeada com",
+          bloodInfo: null,
+          chain: []
+        };
+      }
+
+      // If blood relationship exists, prioritize it as primary, unless shortest path is a direct spouse/in-law shortcut (which we also highlight!)
+      if (bloodResult) {
+        const hasShorterAffinal = networkResult && (networkResult.chain.length - 1) < (bloodResult.up + bloodResult.down);
+        return {
+          p1,
+          p2,
+          disconnected: false,
+          primaryTitle: bloodResult.title,
+          p1ToP2: bloodResult.p1ToP2,
+          p2ToP1: bloodResult.p2ToP1,
+          bloodInfo: bloodResult,
+          secondaryAffinal: hasShorterAffinal ? networkResult : null,
+          chain: bloodResult.chain
+        };
+      }
+
+      return {
+        p1,
+        p2,
+        disconnected: false,
+        primaryTitle: networkResult.title,
+        p1ToP2: networkResult.p1ToP2,
+        p2ToP1: networkResult.p2ToP1,
+        bloodInfo: null,
+        secondaryAffinal: null,
+        chain: networkResult.chain
+      };
+    }
+
+    /**
+     * Collects all blood ancestors of `startId` via fatherId & motherId
+     */
+    function getBloodAncestorsMap(startId) {
+      const visited = new Map();
+      const queue = [{ id: startId, dist: 0, path: [startId] }];
+      visited.set(startId, { dist: 0, path: [startId] });
+
+      while (queue.length > 0) {
+        const { id, dist, path } = queue.shift();
+        const p = appState.individuals[id];
+        if (!p) continue;
+
+        [p.fatherId, p.motherId].forEach(parentId => {
+          if (isValidId(parentId) && appState.individuals[parentId] && !visited.has(parentId)) {
+            const nextInfo = { dist: dist + 1, path: [...path, parentId] };
+            visited.set(parentId, nextInfo);
+            queue.push({ id: parentId, dist: dist + 1, path: nextInfo.path });
+          }
+        });
+      }
+      return visited;
+    }
+
+    /**
+     * BFS across parent, child, and spouse edges to find shortest path
+     */
+    function findShortestNetworkPath(id1, id2) {
+      const visited = new Set([id1]);
+      const queue = [[{ person: appState.individuals[id1], edgeFromPrev: null, edgeType: null }]];
+
+      while (queue.length > 0) {
+        const path = queue.shift();
+        const curr = path[path.length - 1].person;
+        if (curr.id === id2) return path;
+
+        const neighbors = [];
+        if (isValidId(curr.fatherId) && appState.individuals[curr.fatherId]) {
+          neighbors.push({ id: curr.fatherId, label: 'Pai', type: 'up' });
+        }
+        if (isValidId(curr.motherId) && appState.individuals[curr.motherId]) {
+          neighbors.push({ id: curr.motherId, label: 'Mãe', type: 'up' });
+        }
+        curr.spouseIds.forEach(sid => {
+          if (isValidId(sid) && appState.individuals[sid]) {
+            neighbors.push({ id: sid, label: 'Cônjuge', type: 'spouse' });
+          }
+        });
+        curr.childrenIds.forEach(cid => {
+          if (isValidId(cid) && appState.individuals[cid]) {
+            const ch = appState.individuals[cid];
+            const lbl = ch.sex === 'F' ? 'Filha' : (ch.sex === 'M' ? 'Filho' : 'Filho(a)');
+            neighbors.push({ id: cid, label: lbl, type: 'down' });
+          }
+        });
+
+        for (const nb of neighbors) {
+          if (!visited.has(nb.id)) {
+            visited.add(nb.id);
+            queue.push([
+              ...path,
+              {
+                person: appState.individuals[nb.id],
+                edgeFromPrev: nb.label,
+                edgeType: nb.type
+              }
+            ]);
+          }
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Translates (up, down) steps from Person A to Person B into exact Portuguese kinship role of A relative to B
+     * e.g. up=0, down=2 -> A is Avô/Avó of B. up=2, down=0 -> A is Neto/Neta of B.
+     */
+    function translateBloodTerm(up, down, sexA, isFullSibling = true) {
+      const isF = sexA === 'F';
+      const isM = sexA === 'M';
+      const g = (m, f, u) => (isM ? m : isF ? f : u);
+
+      // Direct Ancestor (A is ancestor of B)
+      if (up === 0 && down > 0) {
+        if (down === 1) return g('Pai', 'Mãe', 'Pai/Mãe');
+        if (down === 2) return g('Avô', 'Avó', 'Avô/Avó');
+        if (down === 3) return g('Bisavô', 'Bisavó', 'Bisavô/Bisavó');
+        if (down === 4) return g('Trisavô', 'Trisavó', 'Trisavô/Trisavó');
+        if (down === 5) return g('Tetravô', 'Tetravó', 'Tetravô/Tetravó');
+        if (down === 6) return g('Pentavô', 'Pentavó', 'Pentavô/Pentavó');
+        if (down === 7) return g('Hexavô', 'Hexavó', 'Hexavô/Hexavó');
+        return `${down - 1}º ${g('Avô', 'Avó', 'Avô/Avó')}`;
+      }
+
+      // Direct Descendant (A is descendant of B)
+      if (down === 0 && up > 0) {
+        if (up === 1) return g('Filho', 'Filha', 'Filho(a)');
+        if (up === 2) return g('Neto', 'Neta', 'Neto(a)');
+        if (up === 3) return g('Bisneto', 'Bisneta', 'Bisneto(a)');
+        if (up === 4) return g('Trisneto', 'Trisneta', 'Trisneto(a)');
+        if (up === 5) return g('Tetraneto', 'Tetraneta', 'Tetraneto(a)');
+        if (up === 6) return g('Pentaneto', 'Pentaneta', 'Pentaneto(a)');
+        if (up === 7) return g('Hexaneto', 'Hexaneta', 'Hexaneto(a)');
+        return `${up - 1}º ${g('Neto', 'Neta', 'Neto(a)')}`;
+      }
+
+      // Siblings
+      if (up === 1 && down === 1) {
+        if (isFullSibling) return g('Irmão', 'Irmã', 'Irmão(ã)');
+        return g('Meio-irmão', 'Meia-irmã', 'Meio-irmão(ã)');
+      }
+
+      // Aunt / Uncle (A is 1 step from LCA, B is >1 steps from LCA)
+      if (up === 1 && down >= 2) {
+        if (down === 2) return g('Tio', 'Tia', 'Tio(a)');
+        if (down === 3) return g('Tio-avô', 'Tia-avó', 'Tio(a)-avô(ó)');
+        if (down === 4) return g('Tio-bisavô', 'Tia-bisavó', 'Tio(a)-bisavô(ó)');
+        if (down === 5) return g('Tio-trisavô', 'Tia-trisavó', 'Tio(a)-trisavô(ó)');
+        return `Tio(a) em ${down - 1}º grau ascendente`;
+      }
+
+      // Niece / Nephew (A is >1 steps from LCA, B is 1 step from LCA)
+      if (down === 1 && up >= 2) {
+        if (up === 2) return g('Sobrinho', 'Sobrinha', 'Sobrinho(a)');
+        if (up === 3) return g('Sobrinho-neto', 'Sobrinha-neta', 'Sobrinho(a)-neto(a)');
+        if (up === 4) return g('Sobrinho-bisneto', 'Sobrinha-bisneta', 'Sobrinho(a)-bisneto(a)');
+        if (up === 5) return g('Sobrinho-trisneto', 'Sobrinha-trisneta', 'Sobrinho(a)-trisneto(a)');
+        return `Sobrinho(a) em ${up - 1}º grau descendente`;
+      }
+
+      // Cousins (up >= 2 && down >= 2)
+      if (up === down) {
+        const degree = up - 1;
+        return `${g('Primo', 'Prima', 'Primo(a)')} em ${degree}º grau`;
+      }
+
+      const minDegree = Math.min(up, down) - 1;
+      const diff = Math.abs(up - down);
+      return `${g('Primo', 'Prima', 'Primo(a)')} em ${minDegree}º grau (${diff} ${diff === 1 ? 'geração' : 'gerações'} de diferença)`;
+    }
+
+    function formatBloodSummaryTitle(up, down, sex1, sex2, isFullSibling) {
+      const t1 = translateBloodTerm(up, down, sex1, isFullSibling);
+      const t2 = translateBloodTerm(down, up, sex2, isFullSibling);
+      if (t1 === t2) return t1;
+      return `${t1} / ${t2}`;
+    }
+
+    /**
+     * Classifies affinal (marriage-connected) paths
+     */
+    function classifyAffinalChain(path, p1, p2) {
+      const types = path.slice(1).map(step => step.edgeType);
+      const sig = types.join('-');
+      const g1 = (m, f, u) => (p1.sex === 'M' ? m : p1.sex === 'F' ? f : u);
+      const g2 = (m, f, u) => (p2.sex === 'M' ? m : p2.sex === 'F' ? f : u);
+
+      if (sig === 'spouse') {
+        return {
+          title: 'Cônjuges',
+          p1ToP2: g1('Esposo / Cônjuge', 'Esposa / Cônjuge', 'Cônjuge'),
+          p2ToP1: g2('Esposo / Cônjuge', 'Esposa / Cônjuge', 'Cônjuge')
+        };
+      }
+      if (sig === 'spouse-up') {
+        return {
+          title: `${g1('Genro / Nora', 'Nora', 'Genro/Nora')} e ${g2('Sogro', 'Sogra', 'Sogro(a)')}`,
+          p1ToP2: g1('Genro', 'Nora', 'Genro/Nora'),
+          p2ToP1: g2('Sogro', 'Sogra', 'Sogro(a)')
+        };
+      }
+      if (sig === 'down-spouse') {
+        return {
+          title: `${g1('Sogro', 'Sogra', 'Sogro(a)')} e ${g2('Genro', 'Nora', 'Genro/Nora')}`,
+          p1ToP2: g1('Sogro', 'Sogra', 'Sogro(a)'),
+          p2ToP1: g2('Genro', 'Nora', 'Genro/Nora')
+        };
+      }
+      if (sig === 'up-spouse') {
+        return {
+          title: `${g1('Enteado', 'Enteada', 'Enteado(a)')} e ${g2('Padrasto', 'Madrasta', 'Padrasto/Madrasta')}`,
+          p1ToP2: g1('Enteado', 'Enteada', 'Enteado(a)'),
+          p2ToP1: g2('Padrasto', 'Madrasta', 'Padrasto/Madrasta')
+        };
+      }
+      if (sig === 'spouse-down') {
+        return {
+          title: `${g1('Padrasto', 'Madrasta', 'Padrasto/Madrasta')} e ${g2('Enteado', 'Enteada', 'Enteado(a)')}`,
+          p1ToP2: g1('Padrasto', 'Madrasta', 'Padrasto/Madrasta'),
+          p2ToP1: g2('Enteado', 'Enteada', 'Enteado(a)')
+        };
+      }
+      if (sig === 'spouse-up-down' || sig === 'up-down-spouse') {
+        return {
+          title: `${g1('Cunhado', 'Cunhada', 'Cunhado(a)')}`,
+          p1ToP2: g1('Cunhado', 'Cunhada', 'Cunhado(a)'),
+          p2ToP1: g2('Cunhado', 'Cunhada', 'Cunhado(a)')
+        };
+      }
+      if (sig === 'spouse-up-down-spouse') {
+        return {
+          title: `${g1('Concunhado', 'Concunhada', 'Concunhado(a)')}`,
+          p1ToP2: g1('Concunhado', 'Concunhada', 'Concunhado(a)'),
+          p2ToP1: g2('Concunhado', 'Concunhada', 'Concunhado(a)')
+        };
+      }
+      if (sig === 'down-spouse-up') {
+        return {
+          title: `${g1('Consogro', 'Consogra', 'Consogro(a)')}`,
+          p1ToP2: g1('Consogro', 'Consogra', 'Consogro(a)'),
+          p2ToP1: g2('Consogro', 'Consogra', 'Consogro(a)')
+        };
+      }
+
+      const stepsCount = types.length;
+      return {
+        title: `Parentesco por Afinidade (${stepsCount} graus na rede)`,
+        p1ToP2: `Parente por afinidade (${stepsCount} elos de distância)`,
+        p2ToP1: `Parente por afinidade (${stepsCount} elos de distância)`
+      };
+    }
+
+
+    // ============================================================================
+    // 6. ATUALIZAÇÃO DA UI (DOSSIÊ, TELEMETRIA E BUSCAS)
+    // ============================================================================
+    function setRootPerson(personId) {
+      const person = AppState.individuals[personId];
+      if (!person) return;
+
+      AppState.rootId = personId;
+
+      // Atualizar cabeçalho e painel biográfico
+      document.getElementById('active-ego-title').textContent = person.name;
+      document.getElementById('kinship-ego-name').textContent = person.name.split(' ')[0];
+      document.getElementById('bio-id-badge').textContent = `ID: ${person.id}`;
+      document.getElementById('bio-name').textContent = person.name;
+      document.getElementById('bio-lifespan').textContent = formatLifespan(person);
+      document.getElementById('bio-location').textContent = person.place || 'Não informado';
+      document.getElementById('bio-generation').textContent = person.generation ? `Geração ${person.generation}` : 'Mapeada';
+
+      const statusPill = document.getElementById('bio-status-pill');
+      if (person.isLiving) {
+        statusPill.textContent = 'Vivo(a)';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+      } else {
+        statusPill.textContent = 'Falecido(a)';
+        statusPill.className = 'px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200';
+      }
+
+      // Renderizar links rápidos de familiares diretos
+      renderFamilyChips('bio-parents-list', [person.fatherId, person.motherId]);
+      renderFamilyChips('bio-spouses-list', person.spouseIds || []);
+      renderFamilyChips('bio-children-list', person.childrenIds || []);
+
+      // Esconder resultado anterior da calculadora de parentesco
+      document.getElementById('kinship-result-box').classList.add('hidden');
+      document.getElementById('kinship-search-input').value = '';
+
+      renderGraph();
+      fitGraphViewport();
+    }
+
+    function renderFamilyChips(containerId, ids) {
+      const container = document.getElementById(containerId);
+      const validPeople = (ids || []).map(id => AppState.individuals[id]).filter(Boolean);
+
+      if (validPeople.length === 0) {
+        container.innerHTML = `<span class="text-slate-400 italic">Não registrado</span>`;
+        return;
+      }
+
+      container.innerHTML = validPeople.map(p => `
+        <button data-goto="${p.id}" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-300 text-slate-700 border border-slate-200 transition text-[11px] font-medium">
+          ${escapeHtml(p.name)}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('button[data-goto]').forEach(btn => {
+        btn.addEventListener('click', () => setRootPerson(btn.getAttribute('data-goto')));
+      });
+    }
+
+    function updateTelemetryHeader(activeNodesCount, renderMs) {
+      const total = AppState.searchIndex.length.toLocaleString('pt-BR');
+      document.getElementById('telemetry-bar').textContent =
+        `${total} indivíduos indexados • Sub-grafo ativo: ${activeNodesCount} nós • Render: ${renderMs}ms` + ((AppState.meta && AppState.meta.generatedAt) ? ` • Base de ${AppState.meta.generatedAt}` : '');
+    }
+
+    function updateLineageAnalytics(subNodes) {
+      const ancestors = subNodes.filter(n => n.role === 'ancestor').length;
+      const descendants = subNodes.filter(n => n.role === 'descendant').length;
+
+      let ageSum = 0;
+      let ageCount = 0;
+      const placeCounts = {};
+
+      subNodes.forEach(n => {
+        if (n.birthYear && n.deathYear && n.deathYear >= n.birthYear) {
+          ageSum += (n.deathYear - n.birthYear);
+          ageCount++;
+        }
+        if (n.place) {
+          placeCounts[n.place] = (placeCounts[n.place] || 0) + 1;
+        }
+      });
+
+      document.getElementById('stat-ancestors').textContent = ancestors;
+      document.getElementById('stat-descendants').textContent = descendants;
+      document.getElementById('stat-lifespan').textContent = ageCount > 0 ? `${Math.round(ageSum / ageCount)}a` : '--';
+
+      const sortedPlaces = Object.entries(placeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      const maxPlace = sortedPlaces.length > 0 ? sortedPlaces[0][1] : 1;
+
+      const barsContainer = document.getElementById('stat-locations-bars');
+      barsContainer.innerHTML = sortedPlaces.map(([place, count]) => {
+        const pct = Math.round((count / maxPlace) * 100);
+        return `
+          <div>
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="text-slate-700 font-medium truncate pr-2">${escapeHtml(place)}</span>
+              <span class="font-mono text-slate-500">${count}</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(box._timer);
+      box._timer = setTimeout(() => box.classList.add('hidden'), 3800);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    // ============================================================================
+    // 7. EVENT LISTENERS E INICIALIZAÇÃO
+    // ============================================================================
+    function setupAutocomplete(inputEl, resultsEl, onSelect) {
+      inputEl.addEventListener('input', () => {
+        const matches = searchPeople(inputEl.value, 12);
+        if (matches.length === 0) {
+          resultsEl.classList.add('hidden');
+          return;
+        }
+        resultsEl.innerHTML = matches.map(m => `
+          <button type="button" data-id="${m.id}" class="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 flex items-center justify-between gap-2 transition">
+            <div>
+              <span class="text-xs font-semibold text-slate-900 block">${escapeHtml(m.name)}</span>
+              <span class="text-[11px] text-slate-500">${escapeHtml(m.place)}</span>
+            </div>
+            <span class="text-[11px] font-mono font-medium text-cyan-700 shrink-0">${m.birthYear || '?'} • ${m.id}</span>
+          </button>
+        `).join('');
+        resultsEl.classList.remove('hidden');
+
+        resultsEl.querySelectorAll('button[data-id]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            resultsEl.classList.add('hidden');
+            inputEl.value = '';
+            onSelect(id);
+          });
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!inputEl.contains(e.target) && !resultsEl.contains(e.target)) {
+          resultsEl.classList.add('hidden');
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      // 1. A base (familia.json) é carregada ao final da inicialização, depois de ligar os controles
+
+      // 2. Configurar buscas (Raiz Principal e Calculadora de Parentesco)
+      setupAutocomplete(
+        document.getElementById('root-search-input'),
+        document.getElementById('root-search-results'),
+        (id) => setRootPerson(id)
+      );
+
+      setupAutocomplete(
+        document.getElementById('kinship-search-input'),
+        document.getElementById('kinship-search-results'),
+        (targetId) => {
+          const t0 = performance.now();
+          const res = calculateKinship(AppState.rootId, targetId);
+          const ms = (performance.now() - t0).toFixed(1);
+          const box = document.getElementById('kinship-result-box');
+          if (!res || res.disconnected) {
+            box.classList.add('hidden');
+            showToast('Nenhuma conexão sanguínea ou matrimonial encontrada entre esses dois ramos.');
+            return;
+          }
+          document.getElementById('kinship-label').textContent = res.primaryTitle;
+          const steps = Math.max(0, res.chain.length - 1);
+          document.getElementById('kinship-hops').textContent = `${steps} ${steps === 1 ? 'passo' : 'passos'} • ${ms}ms`;
+          document.getElementById('kinship-sentence').innerHTML = res.isSamePerson ? '' :
+            `<strong>${escapeHtml(res.p1.name)}</strong> é <strong class="text-amber-800">${escapeHtml(res.p1ToP2)}</strong> de <strong>${escapeHtml(res.p2.name)}</strong>.`;
+          const chainHtml = res.chain.map((step, idx) => {
+            const p = step.person;
+            const edge = idx > 0 && step.edgeFromPrev ? `<span class="text-[10px] text-slate-500 mx-0.5">&rarr; ${escapeHtml(step.edgeFromPrev)} &rarr;</span>` : '';
+            return `${edge}<button data-reroot="${escapeHtml(p.id)}" class="px-1.5 py-0.5 rounded bg-white hover:bg-amber-100/70 hover:text-cyan-700 border border-slate-200 text-slate-800 font-medium transition">${escapeHtml(p.name)}</button>`;
+          }).join('');
+          const chainContainer = document.getElementById('kinship-chain');
+          chainContainer.innerHTML = chainHtml;
+          chainContainer.querySelectorAll('button[data-reroot]').forEach(b => {
+            b.addEventListener('click', () => setRootPerson(b.getAttribute('data-reroot')));
+          });
+          box.classList.remove('hidden');
+        }
+      );
+
+      // 3. Controles de Profundidade, Zoom e Pan
+      const depthSlider = document.getElementById('depth-slider');
+      depthSlider.addEventListener('input', (e) => {
+        AppState.depth = parseInt(e.target.value, 10);
+        document.getElementById('depth-label').textContent = AppState.depth;
+        renderGraph();
+        fitGraphViewport();
+      });
+
+      setupGraphInteractions();
+
+      // 4. Privacidade, Aleatório e Modal JSON
+      document.getElementById('privacy-toggle').addEventListener('change', (e) => {
+        AppState.privacyMode = e.target.checked;
+        setRootPerson(AppState.rootId);
+        showToast(AppState.privacyMode ? 'Modo Privacidade ativado para pessoas vivas.' : 'Exibindo datas completas.');
+      });
+
+      document.getElementById('btn-random-ego').addEventListener('click', () => {
+        const keys = Object.keys(AppState.individuals);
+        const randomId = keys[Math.floor(Math.random() * keys.length)];
+        setRootPerson(randomId);
+      });
+
+      const modal = document.getElementById('schema-modal');
+      document.getElementById('btn-open-schema').addEventListener('click', () => modal.classList.remove('hidden'));
+      document.getElementById('btn-schema-mobile').addEventListener('click', () => modal.classList.remove('hidden'));
+      document.getElementById('btn-close-schema').addEventListener('click', () => modal.classList.add('hidden'));
+
+      // Upload de arquivo JSON real do usuário
+      document.getElementById('json-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            const map = loadFamilyData(parsed);
+            const keys = Object.keys(map);
+            setRootPerson(pickStartId(map));
+            modal.classList.add('hidden');
+            showToast(`Sucesso! ${keys.length.toLocaleString('pt-BR')} indivíduos carregados.`);
+          } catch (err) {
+            showToast('Erro ao ler JSON. Verifique se segue a estrutura esperada.');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // 5. Carrega o familia.json da mesma pasta do index.html (para atualizar a base, basta substituir esse arquivo)
+      try {
+        const res = await fetch('familia.json', { cache: 'no-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const map = loadFamilyData(await res.json());
+        setRootPerson(pickStartId(map));
+      } catch (err) {
+        console.error(err);
+        document.getElementById('telemetry-bar').textContent = 'Base familiar não carregada.';
+        document.getElementById('active-ego-title').textContent = 'familia.json não encontrado';
+        showToast('Não foi possível carregar o familia.json. Confira se ele está na mesma pasta do index.html (e abra o site por http, não pelo arquivo local).');
+        modal.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
 </html>
